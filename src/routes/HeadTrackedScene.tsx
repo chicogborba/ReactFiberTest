@@ -1,16 +1,16 @@
-import React, { useEffect, useRef, useState } from 'react';
+import  { useEffect, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { FaceMesh } from '@mediapipe/face_mesh';
 import * as cam from '@mediapipe/camera_utils';
 import Car from "../objects/Car";
-import { PerformanceMonitor } from "@react-three/drei";
+// import { PerformanceMonitor } from "@react-three/drei";
 
 const HeadTrackedScene = () => {
   const videoRef = useRef(null);
-  const canvasRef = useRef(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [faceRotation, setFaceRotation] = useState({ x: 0, y: 0 });
   const [fps, setFps] = useState(0);
-  const lastFrameTime = useRef(performance.now());
+  // const lastFrameTime = useRef(performance.now());
 
   useEffect(() => {
     const faceMesh = new FaceMesh({
@@ -25,7 +25,9 @@ const HeadTrackedScene = () => {
     });
 
     faceMesh.onResults((results) => {
+      if (!canvasRef.current) return;
       const canvasCtx = canvasRef.current.getContext('2d');
+      if (!canvasCtx) return;
       canvasCtx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
       
       if (videoRef.current) {
@@ -49,18 +51,22 @@ const HeadTrackedScene = () => {
         const x = (nose.x * canvasRef.current.width) - width / 2;
         const y = (nose.y * canvasRef.current.height) - height / 2;
 
-        canvasCtx.beginPath();
-        canvasCtx.rect(x, y, width, height);
-        canvasCtx.lineWidth = 1;
-        canvasCtx.strokeStyle = "red";
-        canvasCtx.stroke();
+        if (canvasCtx) {
+          canvasCtx.beginPath();
+          canvasCtx.rect(x, y, width, height);
+          canvasCtx.lineWidth = 1;
+          canvasCtx.strokeStyle = "red";
+          canvasCtx.stroke();
+        }
       }
     });
 
     if (videoRef.current) {
       const camera = new cam.Camera(videoRef.current, {
         onFrame: async () => {
-          await faceMesh.send({ image: videoRef.current });
+          if (videoRef.current) {
+            await faceMesh.send({ image: videoRef.current });
+          }
         },
         width: 160,
         height: 240,
@@ -116,7 +122,12 @@ const HeadTrackedScene = () => {
   );
 };
 
-const Scene = ({ faceRotation, setFps }) => {
+interface SceneProps {
+  faceRotation: { x: number; y: number };
+  setFps: React.Dispatch<React.SetStateAction<number>>;
+}
+
+const Scene = ({ faceRotation, setFps }: SceneProps) => {
   const { camera } = useThree();
   const lastFrameTime = useRef(performance.now());
 

@@ -1,4 +1,4 @@
-import { Box, OrbitControls, useKeyboardControls } from "@react-three/drei";
+import { Box, useKeyboardControls } from "@react-three/drei";
 import { RapierRigidBody, RigidBody } from "@react-three/rapier";
 import Car from "../../objects/Car";
 import { useRef } from "react";
